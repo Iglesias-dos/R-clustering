@@ -1,0 +1,92 @@
+---
+title: "clustering"
+author: "tsien.y.c"
+date: "2024-04-24"
+output: html_document
+---
+
+#Clustering exercise 
+
+```{r}
+#first i gonna read data
+eampledata<-read.table("C:/Users/yuyu1/Desktop/clustering/ExampleData.tsv",header = T)
+```
+
+##1.Partitoning-based clustering
+```{r,echo=TRUE}
+#env preparation
+
+if (!requireNamespace("factoextra", quietly = TRUE)) {
+  install.packages("factoextra")
+}
+
+library(factoextra)
+```
+```{r,echo=TRUE}
+#choose the dataset
+data<-eampledata[,1:4]
+#scale the data 
+df<-scale(data)
+```
+
+###(1)because of a priori knowledge, speices can be divided into k 
+```{r,echo=TRUE}
+#because of a priori knowledge, speices can be divided into k (3)
+k<-length(unique(eampledata$Species))
+
+```
+
+###(2)another way to estimate k
+```{r,echo=TRUE}
+fviz_nbclust(df,FUNcluster = kmeans,method = "wss")
+#according to the elbow principle, choose 3 as our k parameter
+#we choose 3 as our k
+#set random seed 
+set.seed(123)
+#kmeans
+km.res <- kmeans(df,centers = 3, nstart = 25)
+
+```
+
+```{r}
+print(km.res)
+```
+```{r,echo=TRUE}
+#this step is to calculate the mean of every cluster
+aggregate(data,by=list(cluster=km.res$cluster),mean)
+```
+```{r}
+fviz_cluster(km.res,df)
+```
+##hierarchical clustering
+```{r}
+hc<-hclust(dist(data),method = "ward.D")
+
+```
+
+```{r}
+plot(hc)
+```
+##Density-based 
+```{r,echo=TRUE}
+if (!requireNamespace("dbscan", quietly = TRUE)) {
+  install.packages("dbscan")
+}
+library("dbscan")
+```
+```{r}
+#optimal eps calculation
+kNNdistplot(data, k = 6)
+#from the pic, eps should be around 0.5
+```
+
+
+```{r}
+
+dbscan_cluster<-dbscan(data,eps = 0.8, minPts = 6)
+#parameter:eps为邻域半径，min_samples为最少点数目
+#when points in eps > MinPoins , it fits density
+fviz_cluster(dbscan_cluster,data,stand = F, frame = F, geom = "point")
+```
+
+
